@@ -1,5 +1,4 @@
-# ARM Exceptions: Gotta Catch 'Em All
-
+# ARM Exceptions: Gotta Catch 'Em All!
 Self imposed challenge to cause and handle as many nested exceptions as possible on a Cortex-M4.
 
 A stack-backtrace will be our Pokédex, as it will contain all catched exceptions.
@@ -28,4 +27,4 @@ The used development board is a [STM32L452 Nucleo-64](https://www.st.com/en/eval
 
 ## Videos
 Development of this code has been recorded.
-- Video 1: *TODO: upload*
+- Video 1: [SysTick, PendSV and SVCall](https://www.youtube.com/watch?v=3kEA4-QZVao)
