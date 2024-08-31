@@ -2,7 +2,6 @@
 #![no_main]
 
 use core::sync::atomic::{AtomicI8, Ordering};
-
 use cortex_m::{self as _, peripheral::scb::SystemHandler};
 use cortex_m_rt::{entry, exception, ExceptionFrame};
 use panic_rtt_target as _;
@@ -19,9 +18,9 @@ fn main() -> ! {
     unsafe {
         cortex_m::interrupt::enable();
 
-        let mut core = cortex_m::Peripherals::take().unwrap();
-
+        // Setup exception priorities
         const STEP: u8 = 16;
+        let mut core = cortex_m::Peripherals::take().unwrap();
         core.SCB.set_priority(SystemHandler::SysTick, 255);
         core.SCB.set_priority(SystemHandler::PendSV, 255 - STEP);
         core.SCB.set_priority(SystemHandler::SVCall, 255 - 2 * STEP);
@@ -32,10 +31,12 @@ fn main() -> ! {
         core.SCB
             .set_priority(SystemHandler::MemoryManagement, 255 - 5 * STEP);
 
+        // Enable UsageFault, BusFault and MemManage exceptions
         core.SCB
             .shcsr
             .modify(|v| v | (1 << 16) | (1 << 17) | (1 << 18));
 
+        // Enable and start SysTick timer
         core.SYST.csr.write(0b11);
         core.SYST.rvr.write(0x1000);
     }
@@ -46,10 +47,12 @@ fn main() -> ! {
 #[exception]
 unsafe fn SysTick() {
     println!("SysTick");
+
     // Disable SysTick
     let syst = cortex_m::peripheral::SYST::PTR;
     (*syst).csr.write(0);
 
+    // SVCall with ID 0
     ID.store(0, Ordering::SeqCst);
     core::arch::asm!("SVC #0");
 }
@@ -57,6 +60,8 @@ unsafe fn SysTick() {
 #[exception]
 unsafe fn PendSV() {
     println!("PendSV");
+
+    // SVCall with ID 1
     ID.store(1, Ordering::SeqCst);
     core::arch::asm!("SVC #1");
 }
@@ -67,12 +72,15 @@ unsafe fn SVCall() {
     match id {
         0 => {
             println!("  SVCall {}", id);
+
             // Set PendSV flag
             let scb = cortex_m::peripheral::SCB::PTR;
             (*scb).icsr.write(1 << 28);
         }
         1 => {
             println!("SVCall {}", id);
+
+            // Execute undefined instruction to cause a UsageFault
             core::arch::asm!("udf.w #0");
         }
         _ => unreachable!(),
@@ -102,6 +110,7 @@ unsafe fn MemoryManagement() {
     println!("MemoryManagement");
 
     // Call into Execute Never memory to cause a MemManage fault
+    // This is upgraded to a Hardfault, because we are already in MemManage handler
     let func_xn: fn() = core::mem::transmute(0x40000000);
     func_xn();
 }
@@ -115,9 +124,7 @@ unsafe fn HardFault(_: &ExceptionFrame) -> ! {
 
 #[exception]
 unsafe fn NonMaskableInt() {
-    println!("Hello from NMI!");
-
-    println!("Done from NMI!");
+    println!("NMI");
 }
 
 // #[exception]
@@ -129,7 +136,7 @@ unsafe fn NonMaskableInt() {
 
 #[exception]
 unsafe fn DefaultHandler(nr: i16) {
-    println!("Hello from DefaultHandler! {}", nr);
+    println!("DefaultHandler {}", nr);
 }
 
 // Exception number Exception
