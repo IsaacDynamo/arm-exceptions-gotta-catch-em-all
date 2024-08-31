@@ -3,10 +3,10 @@
 
 use core::sync::atomic::{AtomicI8, Ordering};
 
-use cortex_m_rt::{entry, exception, ExceptionFrame};
-use rtt_target::debug_rprintln as println;
-use panic_rtt_target as _;
 use cortex_m::{self as _, peripheral::scb::SystemHandler};
+use cortex_m_rt::{entry, exception, ExceptionFrame};
+use panic_rtt_target as _;
+use rtt_target::debug_rprintln as println;
 
 static ID: AtomicI8 = AtomicI8::new(0);
 
@@ -24,18 +24,23 @@ fn main() -> ! {
         const STEP: u8 = 16;
         core.SCB.set_priority(SystemHandler::SysTick, 255);
         core.SCB.set_priority(SystemHandler::PendSV, 255 - STEP);
-        core.SCB.set_priority(SystemHandler::SVCall, 255 - 2*STEP);
-        core.SCB.set_priority(SystemHandler::UsageFault, 255 - 3*STEP);
-        core.SCB.set_priority(SystemHandler::BusFault, 255 - 4*STEP);
-        core.SCB.set_priority(SystemHandler::MemoryManagement, 255 - 5*STEP);
+        core.SCB.set_priority(SystemHandler::SVCall, 255 - 2 * STEP);
+        core.SCB
+            .set_priority(SystemHandler::UsageFault, 255 - 3 * STEP);
+        core.SCB
+            .set_priority(SystemHandler::BusFault, 255 - 4 * STEP);
+        core.SCB
+            .set_priority(SystemHandler::MemoryManagement, 255 - 5 * STEP);
 
-        core.SCB.shcsr.modify(|v| v | (1 << 16) | (1 << 17) | (1 << 18));
+        core.SCB
+            .shcsr
+            .modify(|v| v | (1 << 16) | (1 << 17) | (1 << 18));
 
         core.SYST.csr.write(0b11);
         core.SYST.rvr.write(0x1000);
     }
 
-    loop { }
+    loop {}
 }
 
 #[exception]
@@ -69,8 +74,8 @@ unsafe fn SVCall() {
         1 => {
             println!("SVCall {}", id);
             core::arch::asm!("udf.w #0");
-        },
-        _ => unreachable!()
+        }
+        _ => unreachable!(),
     }
 }
 
@@ -88,7 +93,7 @@ unsafe fn BusFault() {
     println!("BusFault");
 
     // Call into Execute Never memory to cause a MemManage fault
-    let func_xn: fn () = core::mem::transmute(0x40000000);
+    let func_xn: fn() = core::mem::transmute(0x40000000);
     func_xn();
 }
 
@@ -97,15 +102,15 @@ unsafe fn MemoryManagement() {
     println!("MemoryManagement");
 
     // Call into Execute Never memory to cause a MemManage fault
-    let func_xn: fn () = core::mem::transmute(0x40000000);
+    let func_xn: fn() = core::mem::transmute(0x40000000);
     func_xn();
 }
 
 #[exception]
-unsafe fn HardFault(_:&ExceptionFrame) -> ! {
+unsafe fn HardFault(_: &ExceptionFrame) -> ! {
     println!("HardFault");
     core::arch::asm!("bkpt");
-    loop { }
+    loop {}
 }
 
 #[exception]
@@ -126,7 +131,6 @@ unsafe fn NonMaskableInt() {
 unsafe fn DefaultHandler(nr: i16) {
     println!("Hello from DefaultHandler! {}", nr);
 }
-
 
 // Exception number Exception
 // 1 Reset
