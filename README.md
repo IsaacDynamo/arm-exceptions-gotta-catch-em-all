@@ -7,10 +7,10 @@ A stack-backtrace will be our Pokédex, as it will contain all catched exception
 The following exceptions have been catched.
 - [ ] Reset
 - [ ] NMI
-- [ ] HardFault
-- [ ] MemManage
-- [ ] BusFault
-- [ ] UsageFault
+- [x] HardFault
+- [x] MemManage
+- [x] BusFault
+- [x] UsageFault
 - [x] SVCall
 - [ ] DebugMonitor
 - [x] PendSV
