@@ -28,3 +28,4 @@ The used development board is a [STM32L452 Nucleo-64](https://www.st.com/en/eval
 ## Videos
 Development of this code has been recorded.
 - Video 1: [SysTick, PendSV and SVCall](https://www.youtube.com/watch?v=3kEA4-QZVao)
+- Video 2: [UsageFault, BusFault, MemManage and HardFault](https://www.youtube.com/watch?v=qNcE33Vj4cw)
