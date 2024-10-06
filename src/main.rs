@@ -118,13 +118,28 @@ unsafe fn MemoryManagement() {
 #[exception]
 unsafe fn HardFault(_: &ExceptionFrame) -> ! {
     println!("HardFault");
-    core::arch::asm!("bkpt");
+
+    // Set NMIPENDSET bit to trigger NMI
+    let scb = cortex_m::peripheral::SCB::PTR;
+    (*scb).icsr.write(1 << 31);
+
     loop {}
 }
 
 #[exception]
 unsafe fn NonMaskableInt() {
     println!("NMI");
+
+    // Busy loop to flush RTT
+    for _ in 0..10_000 {
+        core::arch::asm!("nop")
+    }
+
+    // Trigger software reset
+    let scb = cortex_m::peripheral::SCB::PTR;
+    (*scb).aircr.write(0x05FA0004);
+
+    loop {}
 }
 
 // #[exception]
